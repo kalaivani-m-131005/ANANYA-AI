@@ -5,6 +5,11 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  department?: string;
+  college?: string;
+  year?: string;
+  skills?: string[];
+  careerGoal?: string;
 }
 
 interface AuthContextType {
@@ -13,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     login,
     logout,
+    updateUser: setUser,
   };
 
   return (
