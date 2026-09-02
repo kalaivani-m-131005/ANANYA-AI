@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getProfile } from '@/services/profile';
 import { getGoals, type Goal } from '@/services/goals';
 import { getTasks, type Task } from '@/services/tasks';
+import { getStudySessions, type StudySession } from '@/services/studySessions';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Link } from 'react-router-dom';
@@ -18,18 +19,21 @@ export default function DashboardPage() {
   const [profileData, setProfileData] = useState<any>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [sessions, setSessions] = useState<StudySession[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [profile, goalsData, tasksData] = await Promise.all([
+        const [profile, goalsData, tasksData, sessionsData] = await Promise.all([
           getProfile(),
           getGoals(),
-          getTasks()
+          getTasks(),
+          getStudySessions()
         ]);
         setProfileData(profile);
         setGoals(goalsData);
         setTasks(tasksData);
+        setSessions(sessionsData);
       } catch (err) {
         console.error('Failed to load dashboard data', err);
       } finally {
@@ -65,6 +69,14 @@ export default function DashboardPage() {
   
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
+
+  const today = new Date().toISOString().split('T')[0];
+  const todaySessions = sessions.filter(s => new Date(s.date).toISOString().split('T')[0] === today);
+  const totalStudyMinutesToday = todaySessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+  
+  const upcomingSessions = sessions.filter(s => new Date(s.date) >= new Date(today) && s.status === 'Planned')
+                                   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const nextSession = upcomingSessions.length > 0 ? upcomingSessions[0] : null;
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
@@ -188,17 +200,37 @@ export default function DashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Calendar className="h-5 w-5 text-amber-500" />
                 Study Planner
               </CardTitle>
+              <Link to="/planner" className="text-sm text-indigo-600 hover:text-indigo-800">View All</Link>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <Calendar className="h-10 w-10 text-slate-300 mb-2" />
-                <p className="text-slate-500 text-sm">Create your first study plan.</p>
-              </div>
+              {sessions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <Calendar className="h-10 w-10 text-slate-300 mb-2" />
+                  <p className="text-slate-500 text-sm">Create your first study plan.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 py-2">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="text-slate-600 text-sm">Today's Sessions</span>
+                    <span className="font-semibold text-slate-900">{todaySessions.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="text-slate-600 text-sm">Minutes Today</span>
+                    <span className="font-semibold text-indigo-600">{totalStudyMinutesToday}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 text-sm">Next Upcoming</span>
+                    <span className="font-semibold text-amber-600 truncate max-w-[120px] text-right" title={nextSession ? nextSession.subject : 'None'}>
+                      {nextSession ? nextSession.subject : 'None'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

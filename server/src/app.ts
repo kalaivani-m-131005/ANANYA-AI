@@ -7,6 +7,7 @@ import healthRoutes from './routes/health.routes';
 import profileRoutes from './routes/profile.routes';
 import goalRoutes from './routes/goal.routes';
 import taskRoutes from './routes/task.routes';
+import studySessionRoutes from './routes/studySession.routes';
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/study-sessions', studySessionRoutes);
 
 // Error Middleware
 app.use(errorHandler);
