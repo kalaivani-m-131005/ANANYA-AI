@@ -9,6 +9,7 @@ import goalRoutes from './routes/goal.routes';
 import taskRoutes from './routes/task.routes';
 import studySessionRoutes from './routes/studySession.routes';
 import aiRoutes from './routes/ai.routes';
+import analyticsRoutes from './routes/analytics.routes';
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/goals', goalRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/study-sessions', studySessionRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error Middleware
 app.use(errorHandler);
