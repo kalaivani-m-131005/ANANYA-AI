@@ -3,12 +3,13 @@
    ============================================================ */
 
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Target, CheckSquare, Calendar, BarChart3, UserCircle, Briefcase, GraduationCap, Building2 } from 'lucide-react';
+import { LayoutDashboard, Target, CheckSquare, Calendar, BarChart3, UserCircle, Briefcase, GraduationCap, Building2, Bot, Lightbulb } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getProfile } from '@/services/profile';
 import { getGoals, type Goal } from '@/services/goals';
 import { getTasks, type Task } from '@/services/tasks';
 import { getStudySessions, type StudySession } from '@/services/studySessions';
+import { getRecommendations, type Recommendation } from '@/services/ai';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Link } from 'react-router-dom';
@@ -20,20 +21,23 @@ export default function DashboardPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [sessions, setSessions] = useState<StudySession[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [profile, goalsData, tasksData, sessionsData] = await Promise.all([
+        const [profile, goalsData, tasksData, sessionsData, recsData] = await Promise.all([
           getProfile(),
           getGoals(),
           getTasks(),
-          getStudySessions()
+          getStudySessions(),
+          getRecommendations(false).catch(() => []) // Don't fail dashboard if AI fails
         ]);
         setProfileData(profile);
         setGoals(goalsData);
         setTasks(tasksData);
         setSessions(sessionsData);
+        setRecommendations(recsData);
       } catch (err) {
         console.error('Failed to load dashboard data', err);
       } finally {
@@ -139,7 +143,7 @@ export default function DashboardPage() {
                 <Target className="h-5 w-5 text-emerald-500" />
                 Goals
               </CardTitle>
-              <Link to="/goals" className="text-sm text-indigo-600 hover:text-indigo-800">View All</Link>
+              <Link to="/app/goals" className="text-sm text-indigo-600 hover:text-indigo-800">View All</Link>
             </CardHeader>
             <CardContent>
               {goals.length === 0 ? (
@@ -172,7 +176,7 @@ export default function DashboardPage() {
                 <CheckSquare className="h-5 w-5 text-blue-500" />
                 Tasks
               </CardTitle>
-              <Link to="/tasks" className="text-sm text-indigo-600 hover:text-indigo-800">View All</Link>
+              <Link to="/app/tasks" className="text-sm text-indigo-600 hover:text-indigo-800">View All</Link>
             </CardHeader>
             <CardContent>
               {tasks.length === 0 ? (
@@ -205,7 +209,7 @@ export default function DashboardPage() {
                 <Calendar className="h-5 w-5 text-amber-500" />
                 Study Planner
               </CardTitle>
-              <Link to="/planner" className="text-sm text-indigo-600 hover:text-indigo-800">View All</Link>
+              <Link to="/app/planner" className="text-sm text-indigo-600 hover:text-indigo-800">View All</Link>
             </CardHeader>
             <CardContent>
               {sessions.length === 0 ? (
@@ -231,6 +235,55 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-1 lg:col-span-3 border-indigo-100 bg-indigo-50/30">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg text-indigo-900">
+                <Lightbulb className="h-5 w-5 text-indigo-500" />
+                AI Recommendation
+              </CardTitle>
+              <Link to="/app/recommendations" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">View All</Link>
+            </CardHeader>
+            <CardContent>
+              {recommendations.length === 0 ? (
+                <div className="text-slate-500 text-sm py-2">
+                  No recommendations yet. Generate some based on your profile!
+                </div>
+              ) : (
+                <div className="py-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-slate-900 mb-1">{recommendations[0].title}</h4>
+                      <p className="text-sm text-slate-600 mb-2">{recommendations[0].explanation}</p>
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-indigo-100 text-indigo-700 shadow-sm">
+                        Action: {recommendations[0].actionableStep}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-1 lg:col-span-3 bg-gradient-to-br from-indigo-950 to-slate-900 border-indigo-900/50 shadow-xl">
+            <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              <div className="w-16 h-16 bg-indigo-600/20 rounded-2xl flex items-center justify-center shrink-0">
+                <Bot className="h-8 w-8 text-indigo-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-2">Need help with your studies?</h3>
+                <p className="text-indigo-200/80 text-sm mb-4">
+                  Ask ANANYA-AI for explanations, study tips, and personalized academic guidance.
+                </p>
+                <Link 
+                  to="/app/ai-chat" 
+                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-900/20"
+                >
+                  <Bot className="h-4 w-4" /> Ask AI Assistant
+                </Link>
+              </div>
             </CardContent>
           </Card>
 
